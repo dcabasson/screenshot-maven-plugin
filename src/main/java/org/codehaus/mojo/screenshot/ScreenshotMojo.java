@@ -42,7 +42,6 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.remote.DriverCommand;
 
 /**
  * Capture screenshots of web pages and store the corresponding screenshot in a
@@ -55,7 +54,7 @@ import org.openqa.selenium.remote.DriverCommand;
  * @phase generate-resources
  */
 public class ScreenshotMojo extends AbstractMojo {
-	
+
 	/**
 	 * Location of the screenshots.
 	 * 
@@ -81,54 +80,66 @@ public class ScreenshotMojo extends AbstractMojo {
 	private File inDirectory;
 	
 	/**
+	 * The path to the chrome driver.
+	 * 
+	 * @parameter
+	 * @required
+	 */
+	private String chromeDriverPath;
+
+	/**
 	 * List of selenium drivers to use in the test
 	 * 
 	 * @parameter
 	 * @required
 	 */
-//	private String[] drivers;
-	
-    /**
-     * A map of all the web drivers that will be used to capture screenshot versions of the wireframes.
-     */
-    protected Map<String, WebDriver> webDriverMap;
+	// private String[] drivers;
+
+	/**
+	 * A map of all the web drivers that will be used to capture screenshot
+	 * versions of the wireframes.
+	 */
+	protected Map<String, WebDriver> webDriverMap;
 
 	public void execute() throws MojoExecutionException {
-		webDriverMap=new HashMap<String, WebDriver>();
-		final DesiredCapabilities firefoxCapabilities = DesiredCapabilities.firefox();
-        firefoxCapabilities.setJavascriptEnabled(true);
-        WebDriver firefoxDriver = new FirefoxDriver(firefoxCapabilities);
-        firefoxDriver.manage().window().maximize();
-        webDriverMap.put("firefox", firefoxDriver);
-        final DesiredCapabilities ieCapabilities = DesiredCapabilities.internetExplorer();
-        ieCapabilities.setJavascriptEnabled(true);
-        WebDriver ieDriver = new InternetExplorerDriver(ieCapabilities);
-        ieDriver.manage().window().maximize();
-        webDriverMap.put("ie", ieDriver);
-        final ChromeOptions chromeOptions = new ChromeOptions();
-        WebDriver chromeDriver = new ChromeDriver(chromeOptions);
-        chromeDriver.manage().window().maximize();
-        webDriverMap.put("chrome",  chromeDriver);
-        WebDriver smallChromeDriver = new ChromeDriver(chromeOptions);
-        smallChromeDriver.manage().window().setSize(new Dimension(400, 800));;
-        webDriverMap.put("chrome-small",  smallChromeDriver);
-        if (this.inDirectory.exists() && this.inDirectory.isDirectory()) {
-            final List<String> includes = new ArrayList<String>();
-            includes.add("**/*.html");
+		System.setProperty("webdriver.chrome.driver", chromeDriverPath);
+		webDriverMap = new HashMap<String, WebDriver>();
+		final DesiredCapabilities firefoxCapabilities = DesiredCapabilities
+				.firefox();
+		firefoxCapabilities.setJavascriptEnabled(true);
+		WebDriver firefoxDriver = new FirefoxDriver(firefoxCapabilities);
+		firefoxDriver.manage().window().maximize();
+		webDriverMap.put("firefox", firefoxDriver);
+		final DesiredCapabilities ieCapabilities = DesiredCapabilities
+				.internetExplorer();
+		ieCapabilities.setJavascriptEnabled(true);
+		WebDriver ieDriver = new InternetExplorerDriver(ieCapabilities);
+		ieDriver.manage().window().maximize();
+		webDriverMap.put("ie", ieDriver);
+		final ChromeOptions chromeOptions = new ChromeOptions();
+		WebDriver chromeDriver = new ChromeDriver(chromeOptions);
+		chromeDriver.manage().window().maximize();
+		webDriverMap.put("chrome", chromeDriver);
+		WebDriver smallChromeDriver = new ChromeDriver(chromeOptions);
+		smallChromeDriver.manage().window().setSize(new Dimension(400, 800));
+		webDriverMap.put("chrome-small", smallChromeDriver);
+		if (this.inDirectory.exists() && this.inDirectory.isDirectory()) {
+			final List<String> includes = new ArrayList<String>();
+			includes.add("**/*.html");
 
-            final List<String> excludes = new ArrayList<String>();
-            excludes.add("all/archive/**");
+			final List<String> excludes = new ArrayList<String>();
+			excludes.add("**/archive/**");
 
-            final DirectoryWalker dw = new DirectoryWalker();
-            dw.setBaseDir(this.inDirectory);
-            dw.setIncludes(includes);
-            dw.setExcludes(excludes);
+			final DirectoryWalker dw = new DirectoryWalker();
+			dw.setBaseDir(this.inDirectory);
+			dw.setIncludes(includes);
+			dw.setExcludes(excludes);
 
-            dw.addDirectoryWalkListener(new ScreenshotDirectoryWalker());
-            dw.scan();
-        } else {
-            getLog().debug("No wireframes in that folder");
-        }
+			dw.addDirectoryWalkListener(new ScreenshotDirectoryWalker());
+			dw.scan();
+		} else {
+			getLog().debug("No wireframes in that folder");
+		}
 	}
 
 	private class ScreenshotDirectoryWalker implements DirectoryWalkListener {
@@ -187,7 +198,7 @@ public class ScreenshotMojo extends AbstractMojo {
 		}
 		driver.navigate().to(uri.toURL());
 		try {
-			TimeUnit.SECONDS.sleep(1);
+			TimeUnit.SECONDS.sleep(1); // sleep 1 second to allow for javascript to execute
 		} catch (InterruptedException e1) {
 		}
 
